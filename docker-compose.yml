@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: be-sgroup-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_HOST: postgres  
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 391351
+      DB_NAME: sgroup_db
+    depends_on:
+      - postgres
+    networks:
+      - be-sgroup-net
+    volumes:
+      - .:/app               
+      - /app/node_modules  
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: be-sgroup-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 391351
+      POSTGRES_DB: sgroup_db
+    ports:
+      - "5435:5432"  
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - be-sgroup-net
+
+networks:
+  be-sgroup-net:
+
+volumes:
+  postgres_data:
