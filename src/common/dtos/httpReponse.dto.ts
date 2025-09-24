@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ZodError, ZodSchema } from 'zod';
-import { HttpResponseBodySuccessDto } from './httpResponseBodySuccess.dto.js';
+import { HttpResponseBodySuccessDto } from './httpResponseBodySuccess.dto';
 import { HTTPException } from '@tsed/exceptions';
 
 export class HttpReponseDtos {

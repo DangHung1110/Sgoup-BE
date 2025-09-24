@@ -14,13 +14,13 @@ services:
       DB_USER: postgres
       DB_PASSWORD: 391351
       DB_NAME: sgroup_db
+      SESSION_SECRET: dev_session_secret
     depends_on:
       - postgres
     networks:
       - be-sgroup-net
     volumes:
       - .:/app               
-      - /app/node_modules  
 
   postgres:
     image: postgres:15-alpine

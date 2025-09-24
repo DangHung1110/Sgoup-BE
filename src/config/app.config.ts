@@ -8,4 +8,5 @@ export const appEnv = cleanEnv(process.env, {
     HOST: host({ devDefault: testOnly('localhost') }),
     PORT: port({ devDefault: testOnly(3000) }),
     CORS_ORIGIN: str({ devDefault: testOnly('http://localhost:3000') }),
+    SESSION_SECRET: str({ devDefault: testOnly('dev_session_secret') }),
 });

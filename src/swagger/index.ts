@@ -1,3 +1,3 @@
-export * from './openAPIDocumentGenerator.js';
-export * from './openAPIResponseBuilders.js';
-export * from './openAPIRouter.js';
+export * from './openAPIDocumentGenerator';
+export * from './openAPIResponseBuilders';
+export * from './openAPIRouter';

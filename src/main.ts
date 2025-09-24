@@ -4,25 +4,40 @@ import cors from "cors";
 import express, { Express } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser"
+import session from "express-session"
 
-import { openAPIRouter } from "./swagger/openAPIRouter.js";
-import { modules } from "./modules/index.js";
-import { appEnv } from "./config/app.config.js";
+import { openAPIRouter } from "./swagger/openAPIRouter";
+import { modules } from "./modules/index";
+import { appEnv } from "./config/app.config";
+import passport from "./config/passport.config";
 
 const app: Express = express();
 
 app.use(express.json());
-
-// Set the application to trust the reverse proxy
+app.use(cookieParser());
 app.set("trust proxy", true);
 
 // Middlewares
 app.use(cors({ origin: appEnv.CORS_ORIGIN, credentials: true }));
 app.use(helmet());
 app.use(morgan("combined"));
+app.use(session({
+  secret: appEnv.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax'
+  }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 const healCheckRouterInstance = new modules.healthCheckRouter();
+const authRouterInstance = new modules.AuthRouter();
 app.use("/health-check", healCheckRouterInstance.router);
+app.use("/auth", authRouterInstance.router);
 
 app.use(openAPIRouter);
 
