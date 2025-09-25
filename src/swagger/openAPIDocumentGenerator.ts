@@ -9,7 +9,7 @@ import {
   SWAGGER_API_TITLE,
   SWAGGER_API_VERSION,
 } from "./constants.js";
-import { Registries } from "../modules/index.js";
+import { Registries } from "../modules/index";
 
 export function generateOpenAPIDocument() {
   const registry = new OpenAPIRegistry([...Registries]);

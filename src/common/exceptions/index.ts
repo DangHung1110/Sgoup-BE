@@ -1,1 +1,1 @@
-export * from './ErrorResponse.exceptions.js';
+export * from './ErrorResponse.exceptions';

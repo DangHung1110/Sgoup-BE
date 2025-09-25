@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import { z } from 'zod';
-import { ServiceResponseSchema } from '../common/dtos/serviceResponse.dto.js';
-import { HttpResponseBodySuccessDtoSchema } from '../common/dtos/httpResponseBodySuccess.dto.js';
+import { ServiceResponseSchema } from '../common/dtos/serviceResponse.dto';
+import { HttpResponseBodySuccessDtoSchema } from '../common/dtos/httpResponseBodySuccess.dto';
 
 
 export function createApiResponse(schema: z.ZodTypeAny | null, description: string, statusCode = StatusCodes.OK) {
