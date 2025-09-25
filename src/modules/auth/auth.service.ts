@@ -5,6 +5,8 @@ import { User } from "../../entities/user.entities";
 import { ConflictException, NotFoundException } from "../../common/exceptions/ErrorResponse.exceptions";    
 import dotenv from "dotenv";
 import { Request, Response } from "express";
+import crypto from "crypto";
+import { sendEmail } from "../../config/mail.config";
 dotenv.config();
 
 export class AuthService {
@@ -153,7 +155,60 @@ export class AuthService {
         if (!token) {
             throw new NotFoundException("Refresh Token not found!");
         }
-        res.clearCookie("refreshToken");
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict" as const,
+            path: "/",
+        };
+        res.clearCookie("refreshToken", cookieOptions);
         return { msg: "Logged out" };
+    }
+
+    async forgotPassword(email: string, baseResetUrl?: string) {
+        const user = await this.authRespo.findByEmail(email);
+        if (!user) {
+            return { msg: "If that email exists, a reset link has been sent" };
+        }
+
+        const token = crypto.randomBytes(32).toString("hex");
+        const expiresInMinutes = parseInt(process.env.RESET_TOKEN_EXPIRES_MINUTES ?? "30", 10);
+        user.resetToken = token;
+        user.resetTokenExpiry = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+        await this.authRespo.save(user);
+
+        const appName = process.env.APP_NAME ?? "App";
+        const from = process.env.MAIL_FROM ?? process.env.SMTP_USER ?? "no-reply@example.com";
+        const resetUrl = `${process.env.FRONTEND_URL ?? "http://localhost:3000"}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+
+        const subject = `${appName} - Password Reset`;
+        const text = `You requested a password reset. Open this link to reset your password:\n${resetUrl}\nToken: ${token}\nIf you did not request this, you can ignore this email.`;
+        const html = `<p>You requested a password reset.</p>
+<p><a href="${resetUrl}">${resetUrl}</a></p>
+<p><strong>Token:</strong> ${token}</p>
+<p>If you did not request this, you can ignore this email.</p>`;
+
+        if ((process.env.LOG_RESET_URL ?? 'true').toLowerCase() === 'true') {
+            console.log('[AuthService] Password reset URL:', resetUrl);
+        }
+
+        await sendEmail({ from, to: email, subject, text, html });
+
+        return { msg: "If that email exists, a reset link has been sent" };
+    }
+
+    async resetPassword(token: string, newPassword: string) {
+        const user = await this.authRespo.findByValidResetToken(token, new Date());
+        if (!user) {
+            throw new NotFoundException("Invalid or expired reset token");
+        }
+
+        const hashed = await bcrypt.hash(newPassword, 10);
+        user.password = hashed;
+        user.resetToken = null as any;
+        user.resetTokenExpiry = null as any;
+        await this.authRespo.save(user);
+
+        return { msg: "Password has been reset successfully" };
     }
 }

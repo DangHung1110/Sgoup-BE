@@ -11,6 +11,7 @@ import { openAPIRouter } from "./swagger/openAPIRouter";
 import { modules } from "./modules/index";
 import { appEnv } from "./config/app.config";
 import passport from "./config/passport.config";
+import { AppDataSource } from "./config/db.config";
 
 const app: Express = express();
 
@@ -34,15 +35,21 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-const healCheckRouterInstance = new modules.healthCheckRouter();
-const authRouterInstance = new modules.AuthRouter();
-app.use("/health-check", healCheckRouterInstance.router);
-app.use("/auth", authRouterInstance.router);
+AppDataSource.initialize()
+  .then(() => {
+    const healCheckRouterInstance = new modules.healthCheckRouter();
+    const authRouterInstance = new modules.AuthRouter();
+    app.use("/health-check", healCheckRouterInstance.router);
+    app.use("/auth", authRouterInstance.router);
 
-app.use(openAPIRouter);
+    app.use(openAPIRouter);
 
-
-app.listen(appEnv.PORT, () => {
-  const { NODE_ENV, HOST, PORT } = appEnv;
-  console.log(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
-});
+    app.listen(appEnv.PORT, () => {
+      const { NODE_ENV, HOST, PORT } = appEnv;
+      console.log(`Server (${NODE_ENV}) running on port http://${HOST}:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialize database connection:", error);
+    process.exit(1);
+  });

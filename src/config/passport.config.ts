@@ -2,12 +2,13 @@ import passport from "passport";
 import dotenv from "dotenv";
 import { Strategy as GoogleStrategy, Profile as GoogleProfile } from "passport-google-oauth20";
 import { Strategy as FacebookStrategy, Profile as FacebookProfile } from "passport-facebook";
-import { AuthService } from "../modules/auth/auth.service.js";
-import { User } from "../entities/user.entities.js";
+import { AuthService } from "../modules/auth/auth.service";
+import { authRepository } from "../modules/auth/auth.respository";
 
 dotenv.config();
 
 const authService = new AuthService();
+const repo = new authRepository();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
@@ -31,25 +32,19 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        const foundUser = await (User as any).findOne({ "providers.google.id": profile.id });
-        if (!foundUser) {
-          const newUser = new (User as any)({
-            fullname: profile.displayName ?? profile._json?.name ?? "",
-            username: profile._json?.email ?? "",
-            email: profile._json?.email ?? "",
-            password: "",
-            loginMethod: "google",
-            providers: {
-              google: {
-                id: profile.id,
-                email: profile._json?.email,
-              },
-            },
-          });
-          await newUser.save();
-          return done(null, newUser);
-        }
-        return done(null, foundUser);
+        const email = (profile._json as any)?.email ?? "";
+        if (!email) return done(new Error("Google profile missing email"));
+
+        const existing = await repo.findByEmail(email);
+        if (existing) return done(null, existing);
+
+        const created = await repo.createUser({
+          name: profile.displayName ?? (profile._json as any)?.name ?? "",
+          email,
+          password: "",
+          role: "user",
+        });
+        return done(null, created);
       } catch (err) {
         return done(err as any);
       }
@@ -72,25 +67,19 @@ passport.use(
       done: (error: any, user?: any) => void
     ) => {
       try {
-        const foundUser = await (User as any).findOne({ "providers.facebook.id": profile.id });
-        if (!foundUser) {
-          const newUser = new (User as any)({
-            fullname: profile.displayName ?? profile._json?.name ?? "",
-            username: profile._json?.email ?? "",
-            email: profile._json?.email ?? "",
-            password: "",
-            loginMethod: "facebook",
-            providers: {
-              facebook: {
-                id: profile.id,
-                email: profile._json?.email,
-              },
-            },
-          });
-          await newUser.save();
-          return done(null, newUser);
-        }
-        return done(null, foundUser);
+        const email = (profile._json as any)?.email ?? "";
+        if (!email) return done(new Error("Facebook profile missing email"));
+
+        const existing = await repo.findByEmail(email);
+        if (existing) return done(null, existing);
+
+        const created = await repo.createUser({
+          name: profile.displayName ?? (profile._json as any)?.name ?? "",
+          email,
+          password: "",
+          role: "user",
+        });
+        return done(null, created);
       } catch (err) {
         return done(err as any);
       }

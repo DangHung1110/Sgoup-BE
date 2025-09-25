@@ -17,6 +17,8 @@ export class AuthRouter {
         this.router.post('/login', this.authController.login.bind(this.authController));
         this.router.post('/refresh', this.authController.refresh.bind(this.authController));
         this.router.post('/logout', this.authController.logout.bind(this.authController));
+        this.router.post('/forgot-password', this.authController.forgotPassword.bind(this.authController));
+        this.router.post('/reset-password', this.authController.resetPassword.bind(this.authController));
 
         this.router.get(
             "/google",

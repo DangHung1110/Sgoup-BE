@@ -29,10 +29,26 @@ const LoginResponseSchema = z.object({
   accessToken: z.string(),
 });
 
+const RefreshResponseSchema = z.object({
+  accessToken: z.string(),
+});
+
+const ForgotPasswordRequestSchema = z.object({
+  email: z.string().email().openapi({ example: "user@example.com" }),
+});
+
+const ResetPasswordRequestSchema = z.object({
+  token: z.string().min(1).openapi({ example: "<reset-token-from-email>" }),
+  password: z.string().min(6).openapi({ example: "newStrongPassword123" })
+});
+
 authRegistry.register("RegisterRequest", RegisterRequestSchema);
 authRegistry.register("User", UserSchema);
 authRegistry.register("LoginRequest", LoginRequestSchema);
 authRegistry.register("LoginResponse", LoginResponseSchema);
+authRegistry.register("RefreshResponse", RefreshResponseSchema);
+authRegistry.register("ForgotPasswordRequest", ForgotPasswordRequestSchema);
+authRegistry.register("ResetPasswordRequest", ResetPasswordRequestSchema);
 
 authRegistry.registerPath({
   method: "post",
@@ -67,6 +83,64 @@ authRegistry.registerPath({
   responses: createApiResponse(
     LoginResponseSchema,
     "Login successful"
+  ),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/refresh",
+  tags: ["Auth"],
+  description: "Reads refresh token from cookie and returns a new access token. Also sets a new refresh token cookie.",
+  responses: createApiResponse(
+    RefreshResponseSchema,
+    "Refreshed tokens"
+  ),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/logout",
+  tags: ["Auth"],
+  description: "Clears the refreshToken cookie. In Swagger UI, also click 'Authorize' → 'Logout' to clear the in-memory bearer token.",
+  responses: createApiResponse(
+    z.null(),
+    "Logged out"
+  ),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/forgot-password",
+  tags: ["Auth"],
+  requestBody: {
+    required: true,
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ForgotPasswordRequest" },
+      },
+    },
+  },
+  responses: createApiResponse(
+    z.null(),
+    "If email exists, a reset link has been sent"
+  ),
+});
+
+authRegistry.registerPath({
+  method: "post",
+  path: "/auth/reset-password",
+  tags: ["Auth"],
+  requestBody: {
+    required: true,
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ResetPasswordRequest" },
+      },
+    },
+  },
+  responses: createApiResponse(
+    z.null(),
+    "Password has been reset successfully"
   ),
 });
 

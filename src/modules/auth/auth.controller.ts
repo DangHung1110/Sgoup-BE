@@ -94,7 +94,21 @@ export class AuthController {
     async logout(req: Request, res: Response, next: NextFunction) {
         const refreshToken = req.cookies?.refreshToken;
         await this.authService.logout(refreshToken, res);
-        const response = new ServiceResponse(ResponseStatus.Success, "Log out successfully!", null, 200);
+        const response = new ServiceResponse(ResponseStatus.Success, "Logged out. Please also click 'Authorize' → 'Logout' to clear bearer token in Swagger.", null, 200);
+        this.httpResponse.success(response, res);
+    }
+
+    async forgotPassword(req: Request, res: Response) {
+        const { email } = req.body as { email: string };
+        const result = await this.authService.forgotPassword(email);
+        const response = new ServiceResponse(ResponseStatus.Success, result.msg, null, 200);
+        this.httpResponse.success(response, res);
+    }
+
+    async resetPassword(req: Request, res: Response) {
+        const { token, password } = req.body as { token: string; password: string };
+        const result = await this.authService.resetPassword(token, password);
+        const response = new ServiceResponse(ResponseStatus.Success, result.msg, null, 200);
         this.httpResponse.success(response, res);
     }
 }
